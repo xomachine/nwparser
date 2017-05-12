@@ -2,6 +2,7 @@ from streams import Stream, atEnd, readLine
 from pegs import peg, match
 from structures import Calculation, CalcType, PESPoint
 from utils import skipLines, parseFloat, parseInt, floatPattern
+from units import Hartree
 from nwgeometry import findGeometry
 
 const prefix = """\@'zts'?"""
@@ -26,7 +27,7 @@ proc readBead(fd: Stream): Bead =
     let line = fd.readLine()
     if line.match(beadEnergyPattern, captures):
       result.index = captures[0].parseInt()
-      result.point.energy = captures[1].parseFloat()
+      result.point.energy = captures[1].parseFloat().Hartree
       return
   raise newException(BeadNotFound, "Bead energy not found!")
 

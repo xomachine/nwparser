@@ -1,4 +1,4 @@
-
+from units import Angstrom, Hartree, ReversedCM
 
 type
   CalcType* = enum
@@ -8,19 +8,19 @@ type
     MEP
   Atom* = tuple
     symbol: string
-    x, y, z: BiggestFloat
+    x, y, z: Angstrom
     dx, dy, dz: BiggestFloat
   TermoData* = tuple
-    zpeCorrection: BiggestFloat
-    enthalpyCorrection: BiggestFloat
+    zpeCorrection: Hartree
+    enthalpyCorrection: Hartree
     entropy: BiggestFloat
     rotationalConstants: array[3, BiggestFloat]
   Geometry* = seq[Atom]
   PESPoint* = tuple
     geometry: Geometry
-    energy: BiggestFloat
+    energy: Hartree
   Mode* = tuple
-    frequency: BiggestFloat
+    frequency: ReversedCM
     intensity: BiggestFloat
   Calculation* = object
     initial*: Geometry
