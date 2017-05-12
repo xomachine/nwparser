@@ -1,4 +1,4 @@
-from calcs import Geometry, Atom
+from structures import Geometry, Atom
 from utils import skipLines, parseFloat, associate, floatPattern
 from streams import Stream, atEnd, readLine
 from strutils import `%`

@@ -3,7 +3,7 @@ from streams import newFileStream
 from parseopt import getopt, cmdLongOption, cmdShortOption
 from strutils import `%`
 from utils import parseInt
-from nwparser import parseFile
+from nwchem.nwcommon import parseFile
 from xyz import toStream
 
 var outformat = "xyz"

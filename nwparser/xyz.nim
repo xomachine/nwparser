@@ -1,6 +1,6 @@
 from streams import Stream, writeLine
 from strutils import `%`
-from calcs import Calculation, Geometry, CalcType
+from structures import Calculation, Geometry, CalcType
 
 proc toXYZ(geometry: Geometry, target: Stream, comment: string = "") =
   target.writeLine(geometry.len)

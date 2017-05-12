@@ -1,6 +1,6 @@
 from streams import Stream, atEnd, readLine
 from pegs import peg, match
-from calcs import Calculation, CalcType, PESPoint
+from structures import Calculation, CalcType, PESPoint
 from utils import skipLines, parseFloat, parseInt, floatPattern
 from nwgeometry import findGeometry
 

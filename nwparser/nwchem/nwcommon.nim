@@ -1,8 +1,8 @@
 
 import pegs
 import macros
-from calcs import Calculation
 from streams import Stream, readLine, atEnd
+from structures import Calculation
 from utils import associate
 from nwzts import ZTS_header, readZTS
 
