@@ -21,7 +21,7 @@ type
     energy: Hartree
   Mode* = tuple
     frequency: ReversedCM
-    intensity: BiggestFloat
+    intensity: BiggestFloat | seq[ReversedCM]
   Calculation* = object
     initial*: Geometry
     case kind*: CalcType
