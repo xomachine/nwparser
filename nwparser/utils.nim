@@ -1,11 +1,11 @@
 
 import macros
 from parseutils import parseBiggestFloat, parseInt
-from streams import Stream, readLine
-from pegs import peg, match
+from streams import Stream, readLine, atEnd
+from pegs import peg, match, Peg, `=~`
+from errors import IncompleteCalculationError
 
 const floatPattern* = """\-?\d+\.\d+"""
-
 
 proc parseFloat*(s: string): BiggestFloat =
   assert s.parseBiggestFloat(result, 0) > 0
@@ -13,12 +13,19 @@ proc parseFloat*(s: string): BiggestFloat =
 proc parseInt*(s: string): int =
   assert s.parseInt(result) > 0
 
+proc find*(s: Stream, pattern: Peg,
+           message: string = "Incomplete calculation"): array[10, string] =
+  while not s.readLine().match(pattern, result):
+    if s.atEnd():
+      raise newException(IncompleteCalculationError, message)
+
 macro skipLines*(fd: Stream, count: Natural): typed =
   result = newStmtList()
   let count = count.intVal
+  let skipexpr = quote do:
+    discard `fd`.readLine()
   for i in 0..<count:
-    result.add quote do:
-      discard `fd`.readLine()
+    result.add(skipexpr)
 
 macro associate*(line: string, fd: Stream,
                  associations: varargs[untyped]): typed =

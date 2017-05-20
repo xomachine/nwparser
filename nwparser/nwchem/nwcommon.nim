@@ -5,7 +5,7 @@ from streams import Stream, readLine, atEnd
 from structures import Calculation
 from utils import associate
 from nwzts import ZTSHeader, readZTS
-from nwfreq import FreqHeader, readCalc
+from nwfreq import FreqHeader, readFreq
 
 let ZTSCalc = peg(ZTSHeader)
 let FreqCalc = peg(FreqHeader)
