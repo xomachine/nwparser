@@ -19,6 +19,9 @@ proc find*(s: Stream, pattern: Peg,
     if s.atEnd():
       raise newException(IncompleteCalculationError, message)
 
+proc limit*(a, b: SomeInteger): SomeInteger =
+  if a > b: b else: a
+
 macro skipLines*(fd: Stream, count: Natural): typed =
   result = newStmtList()
   let count = count.intVal
@@ -42,7 +45,7 @@ macro associate*(line: string, fd: Stream,
       let handler_invocation = quote do:
         `res`.add(`handler`(`fd`))
       let condition = quote do:
-        `line`.match(`pattern`)
+        unlikely(`line`.match(`pattern`))
       let expression = newTree(nnkElifExpr, condition.last, handler_invocation)
       result.add(expression)
   else:

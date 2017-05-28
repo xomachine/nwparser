@@ -14,7 +14,7 @@ type
     zpeCorrection: Hartree
     enthalpyCorrection: Hartree
     entropy: BiggestFloat
-    rotationalConstants: array[3, BiggestFloat]
+    rotationalConstants: array[3, ReversedCM]
   Geometry* = seq[Atom]
   PESPoint* = tuple
     geometry: Geometry
@@ -42,10 +42,10 @@ proc initHessian*(rank: Natural): Hessian =
   result.rank = rank
   result.matrix = newSeq[Hartree](((rank + 1)*rank) shr 1)
 
-proc getLine*(h: Hessian, line: Natural): seq[Hartree] =
+proc getLine*(line: Natural): Slice[int] =
   let upper = ((line+1)*(line+2)) shr 1
   let lower = (line*(line+1)) shr 1
-  h.matrix[lower..upper]
+  lower..upper
 
 proc getElement*(h: Hessian, c1, c2: Natural): Hartree =
   ## gets the value from the hessian matrix. it does not matter in which
@@ -53,6 +53,12 @@ proc getElement*(h: Hessian, c1, c2: Natural): Hartree =
   ## orthogonalized
   let n = min(c1, c2)
   let m = max(c1, c2)
-  let theline = h.getLine(m)
-  theline[n]
+  let theline = getLine(m)
+  h.matrix[theline][n]
+
+proc setElement*(h: var Hessian, c1, c2: Natural, elem: Hartree) =
+  let line = max(c1, c2)
+  let col = min(c1, c2)
+  let idxStart = (line*(line+1)) shr 1
+  h.matrix[idxStart+col] = elem
 

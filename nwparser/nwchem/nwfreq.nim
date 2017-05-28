@@ -1,39 +1,92 @@
-from utils import skipLines, floatPattern, parseInt, parseFloat, find
+from utils import skipLines, floatPattern, parseInt, parseFloat, find, limit
 from structures import Calculation, CalcType, Mode, TermoData, Hessian
-from structures import initHessian
-from units import ReversedCM, Bohr
+from structures import initHessian, setElement
+from units import ReversedCM, Bohr, Hartree
 from streams import Stream, atEnd, readLine
 from pegs import peg, findAll, match
 from sequtils import mapIt
-from strutils import `%`, repeat
+from strutils import `%`, repeat, strip, replace
 
 const FreqHeader* = """\s*'NWChem Nuclear Hessian and Frequency Analysis'.*"""
-let rotationalPattern = peg"'Rotational constants'"
+const elemPart = """\s+{$1}""" % floatPattern
+let rotationalPattern = peg"\s*'Rotational Constants'"
 let freqPattern = peg"\s*'NORMAL MODE EIGENVECTORS IN CARTESIAN COORDINATES'"
 let indexPattern = peg"\s+{\d+}"
 let rankPattern = peg"\s*'No. of equations'\s+{\d+}"
 let hessPattern = peg"\s+'MASS-WEIGHTED PROJECTED HESSIAN'.*"
 
 proc readHessian(fd: Stream, rank: Natural): Hessian =
+  stderr.writeLine("Reading Hessian")
   result = initHessian(rank)
+  fd.skipLines(3) # Header
+  let floats = peg"'-'?\d+'.'\d+'D'[+-]\d+"
+  let lineNumber = peg"\s*{\d+}\s+.*"
+  var captures = newSeq[string](10)
+  var residue: int = rank
+  while not fd.atEnd() and residue > 0:
+    let prepattern = """\s+{\d+}""".repeat(residue.limit(10))
+    let pattern = peg(prepattern)
+    residue -= 10
+    let columnNumbersStr = fd.readLine()
+    assert columnNumbersStr.match(pattern, captures)
+    let startColumn = captures[0].parseInt()
+    fd.skipLines(1) # ----
+    while not fd.atEnd():
+      let rawline = fd.readLine()
+      if not rawline.match(lineNumber,captures):
+        fd.skipLines(1)
+        break
+      let lineNo = captures[0].parseInt()
+      assert lineNo in 1..rank
+      let line = rawline.findAll(floats)
+      assert line.len > 0
+      for col in 0..<line.len:
+        let value = line[col].replace("D", "e").parseFloat().Hartree()
+        result.setElement(lineNo - 1, col+startColumn - 1, value)
+
 proc readThermal(fd: Stream): TermoData =
-  discard
-proc readModes(fd: Stream): seq[Mode] =
+  let pattern = peg("""\s*[ABC]'='\s+{$1}\s+'cm-1'.*""" % floatPattern)
+  const zpe = """\s*'Zero-Point correction to Energy'\s+'='\s+{$1}\s+'kcal/mol  ('\s*{$1}\s+'au)'""" % floatPattern
+  let zpePattern = peg(zpe)
+  const enthalpy = """\s*'Thermal correction to Enthalpy'\s+'='\s+{$1}\s+'kcal/mol'\s*'('\s*{$1}\s*'au)'""" % floatPattern
+  let enthalpyPattern = peg(enthalpy)
+  const entropy = """\s*'Total Entropy                    ='\s*{$1}' cal/mol-K'""" % floatPattern
+  let entropyPattern = peg(entropy)
+  var captures = newSeq[string](2)
+  fd.skipLines(1)
+  for i in 0..2:
+    assert fd.readLine().match(pattern, captures)
+    result.rotationalConstants[i] = captures[0].parseFloat().ReversedCM()
+  fd.skipLines(5)
+  assert fd.readLine.match(zpePattern, captures)
+  fd.skipLines(1)
+  result.zpeCorrection = captures[1].parseFloat().Hartree
+  assert fd.readLine().match(enthalpyPattern, captures)
+  fd.skipLines(1)
+  result.enthalpyCorrection = captures[1].parseFloat().Hartree
+  assert fd.readLine().match(entropyPattern, captures)
+  result.entropy = captures[0].parseFloat()
+
+proc readModes(fd: Stream, rank: Natural): seq[Mode] =
   result = newSeq[Mode]()
   var captures = newSeq[string](6)
-  const elemPart = """(\s+{$1})?""" % floatPattern
   fd.skipLines(3)
   while not fd.atEnd():
-    let indexes = fd.readLine().findAll(indexPattern).mapIt(parseInt(it)-1)
+    stderr.writeLine("NewTable")
+    let line = fd.readLine()
+    stderr.writeLine(line)
+    let indexes =
+      line.findAll(indexPattern).mapIt(parseInt(it.strip())-1)
     if indexes.len() == 0:
       break
     result.setLen(indexes.len + result.len)
     fd.skipLines(1)
-    let pfreqPattern = peg("'P.Frequency'" & elemPart.repeat(indexes.len))
+    let pfreqPattern =
+      peg("""\s*'P.Frequency'""" & elemPart.repeat(indexes.len))
     let elemPattern =
-      peg(("""\s*$1""" & elemPart.repeat(indexes.len - 1)) % floatPattern)
-    assert fd.readLine().match(pfreqPattern, captures)
-    let displacements_size = Natural(indexes.len/3)
+      peg("""\s*\d+""" & elemPart.repeat(indexes.len) % floatPattern)
+    assert fd.readLine.match(pfreqPattern, captures)
+    let displacements_size = rank div 3
     for i in 0..<indexes.len:
       let freq = captures[i].parseFloat()
       result[indexes[i]].frequency = freq.ReversedCM()
@@ -41,21 +94,26 @@ proc readModes(fd: Stream): seq[Mode] =
     fd.skipLines(1)
     for di in 0..<displacements_size:
       for i in 0..<3:
-        assert fd.readLine().match(elemPattern, captures)
+        assert fd.readLine.match(elemPattern, captures)
         for fi in 0..<indexes.len:
           let displacement = captures[fi].parseFloat()
           result[indexes[fi]].displacements[di][i] = displacement.Bohr
     if indexes.len < 6:
       break
+    fd.skipLines(1)
 
 proc readFreq*(fd: Stream): Calculation =
   result.kind = CalcType.Frequency
   let captures = fd.find(rankPattern, "Can not detect hessian rank")
   let rank = captures[0].parseInt()
+  stderr.writeLine("Detected Number of frequencies is " & $rank)
   discard fd.find(hessPattern)
   result.hessian = fd.readHessian(rank)
+  stderr.writeLine("Hessian read successfully")
   discard fd.find(rotationalPattern)
   result.termochemistry = readThermal(fd)
+  stderr.writeLine("Thermal read successfully")
   discard fd.find(freqPattern)
-  result.modes = readModes(fd)
+  result.modes = readModes(fd, rank)
+  stderr.writeLine("Modes read successfully")
 
