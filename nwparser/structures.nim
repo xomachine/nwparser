@@ -9,13 +9,18 @@ type
   Atom* = tuple
     symbol: string
     x, y, z: Angstrom
-    dx, dy, dz: BiggestFloat
+    dx, dy, dz: Angstrom
+  Bond* = tuple
+    first, second: Natural
+    order: range[1..3]
   TermoData* = tuple
     zpeCorrection: Hartree
     enthalpyCorrection: Hartree
     entropy: BiggestFloat
     rotationalConstants: array[3, ReversedCM]
-  Geometry* = seq[Atom]
+  Geometry* = tuple
+    atoms: seq[Atom]
+    bonds: seq[Bond]
   PESPoint* = tuple
     geometry: Geometry
     energy: Hartree
