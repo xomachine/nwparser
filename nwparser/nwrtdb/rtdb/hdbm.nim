@@ -31,6 +31,7 @@ proc load*(input: Stream): HDBM =
   result = initTable[string, Entry]()
   while not input.atEnd:
     let fentry = FileEntry.deserialize(input)
-    let entry = Entry(data: fentry.val, active: fentry.active)
-    result[fentry.key] = entry
+    if fentry.active:
+      let entry = Entry(data: fentry.val, active: fentry.active)
+      result[fentry.key] = entry
 
