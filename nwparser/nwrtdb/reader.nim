@@ -1,8 +1,10 @@
 from rtdb.hdbm import load
 from rtdb.rtdb import toRTDB, getKeyAs, `$`
-from structures import Calculation, CalcType, Mode
+from dbgeometry import readGeometry
+from structures import Calculation, CalcType, Mode, PESPoint
 from units import ReversedCM, Bohr
 from streams import Stream
+from strutils import repeat
 from sequtils import mapIt, filterIt, distribute
 
 proc readDB*(fd: Stream): seq[Calculation] =
@@ -32,7 +34,13 @@ proc readDB*(fd: Stream): seq[Calculation] =
                             displacements: displacements)
   of "neb", "string":
     result[0].kind = CalcType.MEP
-    discard # TODO
+    let nbeads = getKeyAs[int64](db, operation & ":nbeads")[0]
+    result[0].path = newSeq[PESPoint](nbeads)
+    for i in 1..nbeads:
+      let istr = $i
+      let beadname = "bead_" & "0".repeat(6-istr.len) & istr & ":geom"
+      result[0].path[i-1] =
+        PESPoint(geometry: db.readGeometry(beadname), energy: 0.0.Hartree)
   else:
     quit("Unsupported operation: " & operation)
 
