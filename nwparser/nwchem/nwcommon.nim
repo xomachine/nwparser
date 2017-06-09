@@ -7,10 +7,10 @@ from utils import associate
 from nwzts import ZTSHeader, readZTS
 from nwfreq import FreqHeader, readFreq
 
-let ZTSCalc = peg(ZTSHeader)
-let FreqCalc = peg(FreqHeader)
 
 proc parseFile*(fd: Stream): seq[Calculation] =
+  let ZTSCalc {.global.} = peg(ZTSHeader)
+  let FreqCalc {.global.} = peg(FreqHeader)
   result = newSeq[Calculation]()
   while not fd.atEnd():
     let line = fd.readLine()

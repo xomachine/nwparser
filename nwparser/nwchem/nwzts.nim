@@ -7,12 +7,6 @@ from nwgeometry import findGeometry
 
 const prefix = """\@'zts'?"""
 const ZTS_header* = prefix & """' String method'\."""
-let nBeadsPattern = peg(prefix & """' Number of replicas'\s+\=\s+{\d+}""")
-let iterationPattern = peg("""\s*'string: iteration #'\s+{\d+}""")
-let beadStartPattern = peg"\s*'string: running bead'\s+{\d+}"
-let beadEnergyPattern =
-  peg("""\s*'string: finished bead'\s+{\d+}' energy='\s+{""" &
-      floatPattern & "}")
 
 type
   BeadNotFound = object of Exception
@@ -21,6 +15,9 @@ type
     point: PESPoint
 
 proc readBead(fd: Stream): Bead =
+  let beadEnergyPattern {.global.} =
+    peg("""\s*'string: finished bead'\s+{\d+}' energy='\s+{""" &
+        floatPattern & "}")
   result.point.geometry = findGeometry(fd)
   var captures = newSeq[string](2)
   while (not fd.atEnd()):
@@ -40,6 +37,8 @@ proc readZeroIteration(fd: Stream, nbeads: Natural): seq[PESPoint] =
 
 proc readIteration(fd: Stream, path: seq[PESPoint]): seq[PESPoint] =
   var newpath = path
+  let iterationPattern {.global.} = peg("""\s*'string: iteration #'\s+{\d+}""")
+  let beadStartPattern {.global.} = peg"\s*'string: running bead'\s+{\d+}"
   while not fd.atEnd():
     let nextline = fd.readLine()
     if nextline.match(beadStartPattern):
@@ -50,6 +49,8 @@ proc readIteration(fd: Stream, path: seq[PESPoint]): seq[PESPoint] =
   return path
 
 proc readZTS*(fd: Stream): Calculation =
+  let nBeadsPattern {.global.} =
+    peg(prefix & """' Number of replicas'\s+\=\s+{\d+}""")
   stderr.writeLine "Found ZTS pattern"
   result.kind = CalcType.MEP
   fd.skipLines(4)

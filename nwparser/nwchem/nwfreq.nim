@@ -9,11 +9,6 @@ from strutils import `%`, repeat, strip, replace
 
 const FreqHeader* = """\s*'NWChem Nuclear Hessian and Frequency Analysis'.*"""
 const elemPart = """\s+{$1}""" % floatPattern
-let rotationalPattern = peg"\s*'Rotational Constants'"
-let freqPattern = peg"\s*'NORMAL MODE EIGENVECTORS IN CARTESIAN COORDINATES'"
-let indexPattern = peg"\s+{\d+}"
-let rankPattern = peg"\s*'No. of equations'\s+{\d+}"
-let hessPattern = peg"\s+'MASS-WEIGHTED PROJECTED HESSIAN'.*"
 
 proc readHessian(fd: Stream, rank: Natural): Hessian =
   stderr.writeLine("Reading Hessian")
@@ -45,13 +40,18 @@ proc readHessian(fd: Stream, rank: Natural): Hessian =
         result.setElement(lineNo - 1, col+startColumn - 1, value)
 
 proc readThermal(fd: Stream): TermoData =
-  let pattern = peg("""\s*[ABC]'='\s+{$1}\s+'cm-1'.*""" % floatPattern)
-  const zpe = """\s*'Zero-Point correction to Energy'\s+'='\s+{$1}\s+'kcal/mol  ('\s*{$1}\s+'au)'""" % floatPattern
-  let zpePattern = peg(zpe)
-  const enthalpy = """\s*'Thermal correction to Enthalpy'\s+'='\s+{$1}\s+'kcal/mol'\s*'('\s*{$1}\s*'au)'""" % floatPattern
-  let enthalpyPattern = peg(enthalpy)
-  const entropy = """\s*'Total Entropy                    ='\s*{$1}' cal/mol-K'""" % floatPattern
-  let entropyPattern = peg(entropy)
+  let pattern {.global.} =
+    peg("""\s*[ABC]'='\s+{$1}\s+'cm-1'.*""" % floatPattern)
+  const zpe = """\s*'Zero-Point correction to Energy'\s+'=""" &
+    """'\s+{$1}\s+'kcal/mol  ('\s*{$1}\s+'au)'""" % floatPattern
+  let zpePattern {.global.} = peg(zpe)
+  const enthalpy = """\s*'Thermal correction to Enthalpy'\s+'=""" &
+    """'\s+{$1}\s+'kcal/mol'\s*'('\s*{$1}\s*'au)'""" % floatPattern
+  let enthalpyPattern {.global.} = peg(enthalpy)
+  const entropy =
+    """\s*'Total Entropy                    ='\s*{$1}' cal/mol-K'""" %
+      floatPattern
+  let entropyPattern {.global.} = peg(entropy)
   var captures = newSeq[string](2)
   fd.skipLines(1)
   for i in 0..2:
@@ -69,6 +69,7 @@ proc readThermal(fd: Stream): TermoData =
 
 proc readModes(fd: Stream, rank: Natural): seq[Mode] =
   result = newSeq[Mode]()
+  let indexPattern {.global.} = peg"\s+{\d+}"
   var captures = newSeq[string](6)
   fd.skipLines(3)
   while not fd.atEnd():
@@ -103,6 +104,11 @@ proc readModes(fd: Stream, rank: Natural): seq[Mode] =
     fd.skipLines(1)
 
 proc readFreq*(fd: Stream): Calculation =
+  let rotationalPattern {.global.} = peg"\s*'Rotational Constants'"
+  let freqPattern {.global.} =
+    peg"\s*'NORMAL MODE EIGENVECTORS IN CARTESIAN COORDINATES'"
+  let rankPattern {.global.} = peg"\s*'No. of equations'\s+{\d+}"
+  let hessPattern {.global.} = peg"\s+'MASS-WEIGHTED PROJECTED HESSIAN'.*"
   result.kind = CalcType.Frequency
   let captures = fd.find(rankPattern, "Can not detect hessian rank")
   let rank = captures[0].parseInt()

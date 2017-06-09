@@ -5,16 +5,11 @@ from streams import Stream, atEnd, readLine
 from strutils import `%`
 import pegs
 
-let headerPattern = peg"\s*'Output coordinates'.*"
-let gradientPattern = peg"\s*\ident\s'ENERGY GRADIENTS'.*"
 # no tag charge x y z
-let coordTablePattern =
-  peg("""\s*{\d+}\s{\ident}\s+{$1}\s+{$1}\s+{$1}\s+{$1}""" % floatPattern)
-let gradTablePattern =
-  peg("""\s*{\d+}\s{\ident}\s+{$1}\s+{$1}\s+{$1}\s+{$1}\s+{$1}\s+{$1}""" %
-      floatPattern)
 
 proc readGeometry(fd: Stream): Geometry =
+  let coordTablePattern {.global.} =
+    peg("""\s*{\d+}\s{\ident}\s+{$1}\s+{$1}\s+{$1}\s+{$1}""" % floatPattern)
   result.atoms = newSeq[Atom]()
   fd.skipLines(3)
   var captures = newSeq[string](6)
@@ -28,6 +23,9 @@ proc readGeometry(fd: Stream): Geometry =
     result.atoms.add(atom)
 
 proc readGradient(fd: Stream): Geometry =
+  let gradTablePattern {.global.} =
+    peg("""\s*{\d+}\s{\ident}\s+{$1}\s+{$1}\s+{$1}\s+{$1}\s+{$1}\s+{$1}""" %
+        floatPattern)
   result.atoms = newSeq[Atom]()
   fd.skipLines(3)
   var captures = newSeq[string](8)
@@ -41,6 +39,8 @@ proc readGradient(fd: Stream): Geometry =
     result.atoms.add(atom)
 
 proc findGeometry*(fd: Stream): Geometry =
+  let headerPattern {.global.} = peg"\s*'Output coordinates'.*"
+  let gradientPattern {.global.} = peg"\s*\ident\s'ENERGY GRADIENTS'.*"
   while (not fd.atEnd()):
     let line = fd.readLine()
     if line.match(headerPattern):
