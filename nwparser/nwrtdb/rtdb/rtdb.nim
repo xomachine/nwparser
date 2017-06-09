@@ -67,7 +67,7 @@ proc toRTDB*(hdbm: HDBM): RTDB =
                             kind: Undefined, data: @[])
       result[k].data = v.data
 
-proc getKeyAs*[T](self: RTDB, key: string): seq[T] | string =
+proc getKeyAs*[T](self: RTDB, key: string): auto =
   let element = self[key]
   when T is string:
     result = newString(element.nelements)

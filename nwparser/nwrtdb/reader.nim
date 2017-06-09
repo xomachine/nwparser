@@ -1,9 +1,9 @@
 from rtdb.hdbm import load
 from rtdb.rtdb import toRTDB, getKeyAs, `$`
 from structures import Calculation, CalcType, Mode
-from units import ReversedCM
+from units import ReversedCM, Bohr
 from streams import Stream
-from sequtils import mapIt, filterIt
+from sequtils import mapIt, filterIt, distribute
 
 proc readDB*(fd: Stream): seq[Calculation] =
   let db = fd.load().toRTDB()
@@ -26,7 +26,7 @@ proc readDB*(fd: Stream): seq[Calculation] =
       var displacements = newSeq[array[3, Bohr]](ndispls)
       for j in 0..<displsPerFrame.len:
         for k in 0..2:
-          displacements[j][k] = displsPerFrame[j][k]
+          displacements[j][k] = displsPerFrame[j][k].Bohr
       result[0].modes[i] = (frequency: freqs[i], intensity: intensities[i],
                             displacements: displacements)
   of "neb", "string":
