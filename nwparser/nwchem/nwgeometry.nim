@@ -1,13 +1,28 @@
-from structures import Geometry, Atom
-from utils import skipLines, parseFloat, associate, floatPattern
+from structures import Geometry, Atom, Bond
+from utils import skipLines, parseFloat, associate, floatPattern, parseInt, find
 from units import Angstrom, Bohr, toAngstrom
 from streams import Stream, atEnd, readLine
 from strutils import `%`
 import pegs
 
-# no tag charge x y z
+proc readBonds(fd: Stream): seq[Bond] =
+  let bondPattern {.global.} = peg"\s*'internuclear distances'"
+  let bondDataPattern {.global.} =
+    peg("""\s*{\d+}\s\w+\s+'|'\s+{\d+}\s\w+\s+'|'\s+{$1}\s+'|'\s+{$1}""" %
+        floatPattern)
+  discard fd.find(bondPattern, "Bonds not found")
+  fd.skipLines(3)
+  var captures: array[4, string]
+  result = newSeq[Bond]()
+  while fd.readLine.match(bondDataPattern, captures):
+    let atom1 = captures[0].parseInt().Natural
+    let atom2 = captures[1].parseInt().Natural
+    let distance = captures[3].parseFloat().Angstrom
+    # FIXME: distance should be used to obtain the bond order
+    result.add((first: atom1, second: atom2, order: range[1..3](1)))
 
 proc readGeometry(fd: Stream): Geometry =
+  # no tag charge x y z
   let coordTablePattern {.global.} =
     peg("""\s*{\d+}\s{\ident}\s+{$1}\s+{$1}\s+{$1}\s+{$1}""" % floatPattern)
   result.atoms = newSeq[Atom]()
@@ -21,6 +36,7 @@ proc readGeometry(fd: Stream): Geometry =
                                            dy: 0.0.Angstrom,
                                            dz: 0.0.Angstrom)
     result.atoms.add(atom)
+  result.bonds = fd.readBonds()
 
 proc readGradient(fd: Stream): Geometry =
   let gradTablePattern {.global.} =
