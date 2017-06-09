@@ -27,7 +27,7 @@ proc readGeometry(fd: Stream): Geometry =
     peg("""\s*{\d+}\s{\ident}\s+{$1}\s+{$1}\s+{$1}\s+{$1}""" % floatPattern)
   result.atoms = newSeq[Atom]()
   fd.skipLines(3)
-  var captures = newSeq[string](6)
+  var captures: array[6, string]
   while fd.readLine().match(coordTablePattern, captures):
     let atom: Atom = (symbol: captures[1], x: captures[3].parseFloat().Angstrom,
                                            y: captures[4].parseFloat().Angstrom,
@@ -44,7 +44,7 @@ proc readGradient(fd: Stream): Geometry =
         floatPattern)
   result.atoms = newSeq[Atom]()
   fd.skipLines(3)
-  var captures = newSeq[string](8)
+  var captures: array[8, string]
   while fd.readLine().match(gradTablePattern, captures):
     let atom: Atom = (symbol: captures[1], x: captures[2].parseFloat().Bohr().toAngstrom(),
                                            y: captures[3].parseFloat().Bohr().toAngstrom(),

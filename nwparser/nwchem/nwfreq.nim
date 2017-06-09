@@ -16,7 +16,7 @@ proc readHessian(fd: Stream, rank: Natural): Hessian =
   fd.skipLines(3) # Header
   let floats = peg"'-'?\d+'.'\d+'D'[+-]\d+"
   let lineNumber = peg"\s*{\d+}\s+.*"
-  var captures = newSeq[string](10)
+  var captures: array[10, string]
   var residue: int = rank
   while not fd.atEnd() and residue > 0:
     let prepattern = """\s+{\d+}""".repeat(residue.limit(10))
@@ -52,7 +52,7 @@ proc readThermal(fd: Stream): TermoData =
     """\s*'Total Entropy                    ='\s*{$1}' cal/mol-K'""" %
       floatPattern
   let entropyPattern {.global.} = peg(entropy)
-  var captures = newSeq[string](2)
+  var captures: array[2, string]
   fd.skipLines(1)
   for i in 0..2:
     assert fd.readLine().match(pattern, captures)
@@ -70,7 +70,7 @@ proc readThermal(fd: Stream): TermoData =
 proc readModes(fd: Stream, rank: Natural): seq[Mode] =
   result = newSeq[Mode]()
   let indexPattern {.global.} = peg"\s+{\d+}"
-  var captures = newSeq[string](6)
+  var captures: array[6, string]
   fd.skipLines(3)
   while not fd.atEnd():
     stderr.writeLine("NewTable")

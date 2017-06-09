@@ -19,7 +19,7 @@ proc readBead(fd: Stream): Bead =
     peg("""\s*'string: finished bead'\s+{\d+}' energy='\s+{""" &
         floatPattern & "}")
   result.point.geometry = findGeometry(fd)
-  var captures = newSeq[string](2)
+  var captures: array[2, string]
   while (not fd.atEnd()):
     let line = fd.readLine()
     if line.match(beadEnergyPattern, captures):
@@ -54,7 +54,7 @@ proc readZTS*(fd: Stream): Calculation =
   stderr.writeLine "Found ZTS pattern"
   result.kind = CalcType.MEP
   fd.skipLines(4)
-  var captures = newSeq[string](1)
+  var captures: array[1, string]
   let line = fd.readLine()
   stderr.writeLine line
   assert(line.match(nBeadsPattern, captures))
