@@ -12,6 +12,7 @@ proc readDB*(fd: Stream): seq[Calculation] =
   case operation
   of "freq":
     result[0].kind = CalcType.Frequency
+    result[0].initial = db.readGeometry("geometry")
     let freqs = getKeyAs[float64](db, "vib:projected frequencies")
                   .mapIt(it.ReversedCM)
     let rank = freqs.len
