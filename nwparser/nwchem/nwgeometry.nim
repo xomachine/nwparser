@@ -29,12 +29,13 @@ proc readGeometry(fd: Stream): Geometry =
   fd.skipLines(3)
   var captures: array[6, string]
   while fd.readLine().match(coordTablePattern, captures):
-    let atom: Atom = (symbol: captures[1], x: captures[3].parseFloat().Angstrom,
-                                           y: captures[4].parseFloat().Angstrom,
-                                           z: captures[5].parseFloat().Angstrom,
-                                           dx: 0.0.Angstrom,
-                                           dy: 0.0.Angstrom,
-                                           dz: 0.0.Angstrom)
+    let atom: Atom = (id: captures[0].parseInt().Natural, symbol: captures[1],
+                      x: captures[3].parseFloat().Angstrom,
+                      y: captures[4].parseFloat().Angstrom,
+                      z: captures[5].parseFloat().Angstrom,
+                      dx: 0.0.Angstrom,
+                      dy: 0.0.Angstrom,
+                      dz: 0.0.Angstrom)
     result.atoms.add(atom)
   result.bonds = fd.readBonds()
 
@@ -46,12 +47,13 @@ proc readGradient(fd: Stream): Geometry =
   fd.skipLines(3)
   var captures: array[8, string]
   while fd.readLine().match(gradTablePattern, captures):
-    let atom: Atom = (symbol: captures[1], x: captures[2].parseFloat().Bohr().toAngstrom(),
-                                           y: captures[3].parseFloat().Bohr().toAngstrom(),
-                                           z: captures[4].parseFloat().Bohr().toAngstrom(),
-                                           dx: captures[5].parseFloat().Bohr.toAngstrom(),
-                                           dy: captures[6].parseFloat().Bohr.toAngstrom(),
-                                           dz: captures[7].parseFloat().Bohr.toAngstrom())
+    let atom: Atom = (id: captures[0].parseInt().Natural, symbol: captures[1],
+                      x: captures[2].parseFloat().Bohr().toAngstrom(),
+                      y: captures[3].parseFloat().Bohr().toAngstrom(),
+                      z: captures[4].parseFloat().Bohr().toAngstrom(),
+                      dx: captures[5].parseFloat().Bohr.toAngstrom(),
+                      dy: captures[6].parseFloat().Bohr.toAngstrom(),
+                      dz: captures[7].parseFloat().Bohr.toAngstrom())
     result.atoms.add(atom)
 
 proc findGeometry*(fd: Stream): Geometry =

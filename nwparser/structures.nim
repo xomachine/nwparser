@@ -7,6 +7,7 @@ type
     Frequency
     MEP
   Atom* = tuple
+    id: Natural
     symbol: string
     x, y, z: Angstrom
     dx, dy, dz: Angstrom
@@ -33,6 +34,7 @@ type
     displacements: seq[array[3, Bohr]]
   Calculation* = object
     initial*: Geometry
+    multiplicity*: Natural
     case kind*: CalcType
     of Optimization, MEP:
       path*: seq[PESPoint]

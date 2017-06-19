@@ -7,6 +7,8 @@ type
   Calloria* = distinct BiggestFloat
   Kilo*[T] = distinct T
 
+proc `+`*(x, y: Hartree): Hartree {.borrow.}
+
 converter toAngstrom*(input: Bohr): Angstrom =
   Angstrom(input.BiggestFloat * 0.52918)
 converter toBohr*(input: Angstrom): Bohr =

@@ -11,4 +11,5 @@ bin = @["nwparser/converter"]
 # Dependencies
 
 requires "nim >= 0.16.1"
+requires "nesm >= 0.3.1"
 
