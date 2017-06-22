@@ -22,6 +22,8 @@ proc fromCalcs*(calcs: seq[Calculation]): MolSystem =
       result.modes = calc.modes
       result.hessian = calc.hessian
       result.thermal = calc.termochemistry
+      if result.point.geometry.atoms == nil:
+        result.point.geometry = calc.initial
     of CalcType.Optimization:
       result.point = calc.path[^1]
     else:
