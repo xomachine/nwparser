@@ -8,6 +8,7 @@ type
   Kilo*[T] = distinct T
 
 proc `+`*(x, y: Hartree): Hartree {.borrow.}
+proc `==`*(x, y: Angstrom): bool {.borrow.}
 
 converter toAngstrom*(input: Bohr): Angstrom =
   Angstrom(input.BiggestFloat * 0.52918)

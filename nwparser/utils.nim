@@ -15,9 +15,13 @@ proc parseInt*(s: string): int =
 
 proc find*(s: Stream, pattern: Peg,
            message: string = "Incomplete calculation"): array[10, string] =
+  var i = 0
   while not s.readLine().match(pattern, result):
+    i += 1
     if s.atEnd():
+      stderr.writeLine("Skipped " & $i & " lines")
       raise newException(IncompleteCalculationError, message)
+  stderr.writeLine("Found in " & $i & " lines")
 
 proc findAny*(s: Stream, patterns: varargs[Peg]): Natural =
   while not s.atEnd():

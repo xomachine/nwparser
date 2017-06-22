@@ -1,8 +1,8 @@
 
-import pegs
-import macros
+from pegs import peg
 from streams import Stream, readLine, atEnd
 from structures import Calculation, CalcType
+from units import `==`
 from utils import associate
 from nwzts import ZTSHeader, readZTS
 from nwfreq import FreqHeader, readFreq
@@ -15,10 +15,14 @@ proc parseFile*(fd: Stream): seq[Calculation] =
   let FreqCalc {.global.} = peg(FreqHeader)
   let OptCalc {.global.} = peg(OptHeader)
   result = newSeq[Calculation]()
+  let defaultInitial = fd.findGeometry()
   while not fd.atEnd():
     let line = fd.readLine()
     associate(line, fd,
       ZTSCalc: readZTS,
       FreqCalc: readFreq,
       OptCalc: readOpt)
+  for i in 0..<result.len:
+    if result[i].initial.atoms == nil:
+      result[i].initial = defaultInitial
 

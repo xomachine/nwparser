@@ -21,7 +21,7 @@ proc readBonds(fd: Stream): seq[Bond] =
     # FIXME: distance should be used to obtain the bond order
     result.add((first: atom1, second: atom2, order: range[1..3](1)))
 
-proc readGeometry(fd: Stream): Geometry =
+proc readGeometry(fd: Stream, nobonds: bool = false): Geometry =
   # no tag charge x y z
   let coordTablePattern {.global.} =
     peg("""\s*{\d+}\s{\ident}\s+{$1}\s+{$1}\s+{$1}\s+{$1}""" % floatPattern)
@@ -37,7 +37,8 @@ proc readGeometry(fd: Stream): Geometry =
                       dy: 0.0.Angstrom,
                       dz: 0.0.Angstrom)
     result.atoms.add(atom)
-  result.bonds = fd.readBonds()
+  if not nobonds:
+    result.bonds = fd.readBonds()
 
 proc readGradient(fd: Stream): Geometry =
   let gradTablePattern {.global.} =
@@ -56,13 +57,13 @@ proc readGradient(fd: Stream): Geometry =
                       dz: captures[7].parseFloat().Bohr.toAngstrom())
     result.atoms.add(atom)
 
-proc findGeometry*(fd: Stream): Geometry =
-  let headerPattern {.global.} = peg"\s*'Output coordinates'.*"
-  let gradientPattern {.global.} = peg"\s*\ident\s'ENERGY GRADIENTS'.*"
+proc findGeometry*(fd: Stream, nobonds: bool = false): Geometry =
+  let headerPattern {.global.} = peg"^\s*'Output coordinates'.*$"
+  let gradientPattern {.global.} = peg"^\s*\ident\s'ENERGY GRADIENTS'.*$"
   while (not fd.atEnd()):
     let line = fd.readLine()
     if line.match(headerPattern):
-      return readGeometry(fd)
+      return readGeometry(fd, nobonds)
     elif line.match(gradientPattern):
       return readGradient(fd)
 
