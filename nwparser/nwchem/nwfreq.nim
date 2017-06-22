@@ -1,3 +1,4 @@
+from nwgeometry import findGeometry
 from utils import skipLines, floatPattern, parseInt, parseFloat, find, limit
 from structures import Calculation, CalcType, Mode, TermoData, Hessian
 from structures import initHessian, setElement
@@ -110,6 +111,9 @@ proc readFreq*(fd: Stream): Calculation =
   let rankPattern {.global.} = peg"\s*'No. of equations'\s+{\d+}"
   let hessPattern {.global.} = peg"\s+'MASS-WEIGHTED PROJECTED HESSIAN'.*"
   result.kind = CalcType.Frequency
+  let geometry = fd.findGeometry()
+  result.initial = geometry
+  result.multiplicity = fd.find(peg"[Mm]'ult'[^\d]+{\d+}[^\d]*$")[0].parseInt()
   let captures = fd.find(rankPattern, "Can not detect hessian rank")
   let rank = captures[0].parseInt()
   stderr.writeLine("Detected Number of frequencies is " & $rank)

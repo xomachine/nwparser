@@ -15,14 +15,10 @@ proc parseFile*(fd: Stream): seq[Calculation] =
   let FreqCalc {.global.} = peg(FreqHeader)
   let OptCalc {.global.} = peg(OptHeader)
   result = newSeq[Calculation]()
-  let initial = fd.findGeometry()
   while not fd.atEnd():
     let line = fd.readLine()
     associate(line, fd,
       ZTSCalc: readZTS,
       FreqCalc: readFreq,
       OptCalc: readOpt)
-  for i in 0..<result.len:
-    if result[i].kind != CalcType.MEP:
-      result[i].initial = initial
 
