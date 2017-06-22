@@ -1,7 +1,7 @@
 from streams import Stream, atEnd
 from strutils import `%`
 from pegs import peg, match
-from utils import find, floatPattern, parseFloat, parseInt
+from utils import find, findAny, floatPattern, parseFloat, parseInt
 from units import Hartree
 from structures import Calculation, CalcType, PESPoint
 from nwgeometry import findGeometry
@@ -11,13 +11,16 @@ const OptHeader* = """^\s*'NWChem Geometry Optimization'$"""
 proc readOpt*(fd: Stream): Calculation =
   let energyPattern {.global.} =
     peg("""^'@'\s*{\d+}\s*{$1}\s*.*$""" % floatPattern)
-  let stepPattern {.global.} = peg"^\s*'Step'\s+\d+\s*$"
+  let stepPattern {.global.} = peg"^\s*'Step'\s+{\d+}\s*$"
   let multiplicityPattern {.global.} =
     peg"[mM]ult[^\d]+{\d+}[^\d]*$"
+  let endPattern {.global.} = peg"^\s*'Task'\s+'times'\s+'cpu:'.*$"
   result.kind = CalcType.Optimization
   result.path = newSeq[PESPoint]()
   while not fd.atEnd():
-    discard fd.find(stepPattern)
+    let patternIndex = fd.findAny(stepPattern, endPattern)
+    if patternIndex == 1:
+      break
     let stepGeometry = fd.findGeometry()
     let multiplicityCaptures = fd.find(multiplicityPattern)
     let multiplicity = multiplicityCaptures[0].parseInt()

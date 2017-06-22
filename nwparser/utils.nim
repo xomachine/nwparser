@@ -19,6 +19,14 @@ proc find*(s: Stream, pattern: Peg,
     if s.atEnd():
       raise newException(IncompleteCalculationError, message)
 
+proc findAny*(s: Stream, patterns: varargs[Peg]): Natural =
+  while not s.atEnd():
+    let line = s.readLine()
+    for i, pattern in pairs(patterns):
+      if line.match(pattern):
+        return i
+  raise newException(IncompleteCalculationError, "Incomplete calculation")
+
 proc limit*(a, b: SomeInteger): SomeInteger =
   if a > b: b else: a
 

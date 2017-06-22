@@ -39,6 +39,7 @@ proc readIteration(fd: Stream, path: seq[PESPoint]): seq[PESPoint] =
   var newpath = path
   let iterationPattern {.global.} = peg("""\s*'string: iteration #'\s+{\d+}""")
   let beadStartPattern {.global.} = peg"\s*'string: running bead'\s+{\d+}"
+  let calcEndPattern {.global.} = peg"^\s*'Task'\s+'times'\s+'cpu:'.*$"
   while not fd.atEnd():
     let nextline = fd.readLine()
     if nextline.match(beadStartPattern):
@@ -46,6 +47,8 @@ proc readIteration(fd: Stream, path: seq[PESPoint]): seq[PESPoint] =
       newpath[bead.index-1] = bead.point
     elif nextline.match(iterationPattern):
       return newpath
+    elif nextline.match(calcEndPattern):
+      break
   return path
 
 proc readZTS*(fd: Stream): Calculation =
