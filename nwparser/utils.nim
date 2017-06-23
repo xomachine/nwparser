@@ -2,13 +2,15 @@
 import macros
 from parseutils import parseBiggestFloat, parseInt
 from streams import Stream, readLine, atEnd
-from pegs import peg, match, Peg, `=~`
+from pegs import peg, match, Peg, `=~`, replace
 from errors import IncompleteCalculationError
 
 const floatPattern* = """\-?\d+\.\d+"""
 
 proc parseFloat*(s: string): BiggestFloat =
-  assert s.parseBiggestFloat(result, 0) > 0
+  let floatPeg {.global.} = peg"[Dd]"
+  let str = s.replace(floatPeg, "E")
+  assert str.parseBiggestFloat(result, 0) > 0
 
 proc parseInt*(s: string): int =
   assert s.parseInt(result) > 0
