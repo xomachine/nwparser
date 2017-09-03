@@ -47,6 +47,12 @@ type
       termochemistry*: TermoData
     of Energy:
       final*: PESPoint
+  MolSystem* = tuple
+    multiplicity: Natural
+    state: PESPoint
+    modes: seq[Mode]
+    hessian: Hessian
+    termochemistry: TermoData
 
 proc initHessian*(rank: Natural): Hessian =
   result.rank = rank
@@ -72,3 +78,22 @@ proc setElement*(h: var Hessian, c1, c2: Natural, elem: Hartree) =
   let idxStart = (line*(line+1)) shr 1
   h.matrix[idxStart+col] = elem
 
+proc toMolSystem*(calculations: seq[Calculation]): MolSystem =
+  ## Merges multiple coherent calculation to one molecular system description
+  for calculation in calculations:
+    if calculation.multiplicity > 0:
+      if result.multiplicity > 0:
+        assert(result.multiplicity == calculation.multiplicity,
+               "Calculations multiplicity is not coherent!")
+      else:
+        result.multiplicity = calculation.multiplicity
+    case calculation.kind
+    of Energy:
+      result.state = calculation.final
+    of Optimization:
+      result.state = calculation.path[^1]
+    of Frequency:
+      result.hessian = calculation.hessian
+      result.modes = calculation.modes
+    else:
+      discard
