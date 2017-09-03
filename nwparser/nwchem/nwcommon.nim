@@ -25,7 +25,8 @@ proc parseFile*(fd: Stream): seq[Calculation] =
   var prevResult = defaultInitial
   for i in 0..<result.len:
     if result[i].initial.atoms == nil:
-      result[i].initial = prevResult
+      result[i].initial.atoms = prevResult.atoms
+      result[i].initial.bonds = prevResult.bonds
     if result[i].kind == CalcType.Optimization:
       prevResult = result[i].path[^1].geometry
 
