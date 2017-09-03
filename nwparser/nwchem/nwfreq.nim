@@ -62,9 +62,9 @@ proc readThermal(fd: Stream): TermoData =
     assert fd.readLine().match(pattern, captures)
     result.rotationalConstants[i] = captures[0].parseFloat().ReversedCM()
   fd.skipLines(5)
-  assert fd.readLine.match(zpePattern, captures)
+  result.zpeCorrection =
+    fd.find(zpePattern, "Can not find ZPE!")[1].parseFloat().Hartree
   fd.skipLines(1)
-  result.zpeCorrection = captures[1].parseFloat().Hartree
   assert fd.readLine().match(enthalpyPattern, captures)
   fd.skipLines(1)
   result.enthalpyCorrection = captures[1].parseFloat().Hartree

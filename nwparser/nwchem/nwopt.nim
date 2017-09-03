@@ -56,14 +56,14 @@ proc readDriver(fd: Stream): Calculation =
   while not fd.atEnd():
     let patternIndex = fd.findAny(stepPattern, endPattern)
     if patternIndex == 0:
-      var stepGeometry = fd.findGeometry(nobonds = true)
+      var stepGeometry = fd.findGeometry(bonds = false)
       let scfConverged = fd.findAny(performPattern, alreadyPattern) == 1
       if result.multiplicity == 0:
         let multiplicityCaptures = fd.find(multiplicityPattern,
                                            "Can not find multiplicity")
         result.multiplicity = multiplicityCaptures[0].parseInt()
         stderr.writeLine("Multiplicity = " & $result.multiplicity)
-      if scfConverged:
+      if scfConverged or stepGeometry.atoms.len < 2:
         stepGeometry.inertia_momentum = nextInertia
       else:
         stepGeometry.inertia_momentum = fd.readInertiaMoments()
@@ -79,8 +79,9 @@ proc readDriver(fd: Stream): Calculation =
         stderr.writeLine("Energy found!")
         result.path[^1].geometry = fd.findGeometry()
         result.path[^1].energy = energyCaptures[1].parseFloat().Hartree()
-        result.path[^1].geometry.inertia_momentum =
-          result.path[^2].geometry.inertia_momentum
+        if result.path.len > 1:
+          result.path[^1].geometry.inertia_momentum =
+            result.path[^2].geometry.inertia_momentum
       else:
         nextInertia = fd.readInertiaMoments()
     else: break
