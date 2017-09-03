@@ -48,7 +48,7 @@ proc readGeometry(fd: Stream, nobonds: bool = false): Geometry =
   discard fd.find(massPattern, "Masses not found!")
   fd.skipLines(2)
   while fd.readLine().match(massTablePattern, captures):
-    let symbol = captures[0]
+    let symbol = captures[0].strip(true, true, Digits)
     let mass = captures[1].parseFloat().AMU
     massTable[symbol] = mass
     for i in 0..<result.atoms.len:
