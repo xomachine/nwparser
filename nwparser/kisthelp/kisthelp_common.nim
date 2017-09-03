@@ -1,7 +1,7 @@
 from structures import CalcType, Mode, MolSystem, InertiaMatrix
 from units import ReversedCM, Hartree, `$`, AMU, `+`
 from strutils import repeat, join
-from sequtils import mapIt, foldl
+from sequtils import mapIt, foldl, filterIt
 
 type
   Field* = tuple
@@ -17,7 +17,8 @@ proc `$`*(self: seq[Field]): string =
   self.mapIt($it).join("\n")
 
 proc `$`(self: seq[Mode]): string =
-  self.mapIt($it.frequency).join("\n")
+  self.mapIt(it.frequency).filterIt(abs(it.BiggestFloat) > 1.0)
+      .mapIt($it).join("\n")
 
 proc `$`[N](self: array[N, ReversedCM]): string =
   self.mapIt($it).join("\n")
