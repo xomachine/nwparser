@@ -2,7 +2,7 @@ from streams import Stream, atEnd, readLine
 from pegs import peg, match
 from utils import find, findAny, floatPattern, parseFloat, parseInt
 from units import Hartree, `$`
-from structures import Calculation, CalcType, PESPoint
+from structures import Calculation, CalcType, PESPoint, InertiaMatrix
 from nwgeometry import findGeometry
 from nwinertia import readInertiaMoments
 
@@ -48,32 +48,39 @@ proc readDriver(fd: Stream): Calculation =
   let energyPattern {.global.} =
     peg("""^'@'\s+{\d+}\s+{""" & floatPattern & """}.*$""")
   let stepPattern {.global.} = peg"^\s*'Step'\s+{\d+}.*$"
+  let alreadyPattern {.global.} = peg"\s*'The '\ident' is already converged'"
+  let performPattern {.global.} = peg"\s*'Caching 1-el integrals'"
   let convergedPattern {.global.} = peg"\s*'Optimization converged'\s*"
+  var nextInertia: InertiaMatrix
   result.path = newSeq[PESPoint]()
   while not fd.atEnd():
-    let patternIndex = fd.findAny(stepPattern, convergedPattern, endPattern)
-    case patternIndex
-    of 0:
+    let patternIndex = fd.findAny(stepPattern, endPattern)
+    if patternIndex == 0:
       var stepGeometry = fd.findGeometry(nobonds = true)
+      let scfConverged = fd.findAny(performPattern, alreadyPattern) == 1
       if result.multiplicity == 0:
         let multiplicityCaptures = fd.find(multiplicityPattern,
                                            "Can not find multiplicity")
         result.multiplicity = multiplicityCaptures[0].parseInt()
         stderr.writeLine("Multiplicity = " & $result.multiplicity)
-      stepGeometry.inertia_momentum = fd.readInertiaMoments()
+      if scfConverged:
+        stepGeometry.inertia_momentum = nextInertia
+      else:
+        stepGeometry.inertia_momentum = fd.readInertiaMoments()
       let energyCaptures = fd.find(energyPattern, "Can not find energy")
       let energy = energyCaptures[1].parseFloat().Hartree()
       stderr.writeLine("Energy = " & $energy)
       let point = (geometry: stepGeometry, energy: energy)
       result.path.add(point)
-      continue
-    of 1:
-      stderr.writeLine("Optimization converged!")
-      let energyCaptures = fd.find(energyPattern, "Can not find energy")
-      stderr.writeLine("Energy found!")
-      result.path[^1].geometry = fd.findGeometry()
-      result.path[^1].energy = energyCaptures[1].parseFloat().Hartree()
-      result.path[^1].geometry.inertia_momentum =
-        result.path[^2].geometry.inertia_momentum
-    else: discard
-    break
+      let optConverged = fd.findAny(performPattern, convergedPattern) == 1
+      if optConverged:
+        stderr.writeLine("Optimization converged!")
+        let energyCaptures = fd.find(energyPattern, "Can not find energy")
+        stderr.writeLine("Energy found!")
+        result.path[^1].geometry = fd.findGeometry()
+        result.path[^1].energy = energyCaptures[1].parseFloat().Hartree()
+        result.path[^1].geometry.inertia_momentum =
+          result.path[^2].geometry.inertia_momentum
+      else:
+        nextInertia = fd.readInertiaMoments()
+    else: break
