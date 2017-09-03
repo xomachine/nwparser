@@ -21,6 +21,6 @@ converter toBohr*(input: Angstrom): Bohr =
 proc `$`*(a: Angstrom | Bohr | ReversedCM | Hartree | Calloria | AMU): string =
   $(a.BiggestFloat)
 
-converter toKilo*[T](input: T): Kilo[T] = Kilo[T](input.BiggestFloat * 1000)
-converter Unkilo*[T](input: Kilo[T]): T = T(input.BiggestFloat / 1000)
+converter toKilo*[T](input: T): Kilo[T] = Kilo[T](input.BiggestFloat / 1000)
+converter unKilo*[T](input: Kilo[T]): T = T(input.BiggestFloat * 1000)
 
