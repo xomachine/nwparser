@@ -45,6 +45,7 @@ type
       modes*: seq[Mode]
       hessian*: Hessian
       termochemistry*: TermoData
+      energy*: Hartree
     of Energy:
       final*: PESPoint
   MolSystem* = tuple
@@ -95,5 +96,8 @@ proc toMolSystem*(calculations: seq[Calculation]): MolSystem =
     of Frequency:
       result.hessian = calculation.hessian
       result.modes = calculation.modes
+      if result.state.geometry.atoms.len == 0:
+        result.state.geometry = calculation.initial
+        result.state.energy = calculation.energy
     else:
       discard

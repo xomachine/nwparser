@@ -1,6 +1,7 @@
 from nwgeometry import findGeometry
 from nwopt import multiplicityPattern
 from nwinertia import readInertiaMoments
+from nwenergy import readEnergy
 from utils import skipLines, floatPattern, parseInt, parseFloat, find, limit
 from structures import Calculation, CalcType, Mode, TermoData, Hessian
 from structures import initHessian, setElement
@@ -114,6 +115,7 @@ proc readFreq*(fd: Stream): Calculation =
   let hessPattern {.global.} = peg"\s+'MASS-WEIGHTED PROJECTED HESSIAN'.*"
   result.kind = CalcType.Frequency
   result.multiplicity = fd.find(multiplicityPattern)[0].parseInt()
+  result.energy = fd.readEnergy()
   let captures = fd.find(rankPattern, "Can not detect hessian rank")
   let rank = captures[0].parseInt()
   stderr.writeLine("Detected Number of frequencies is " & $rank)
