@@ -54,7 +54,7 @@ proc readGeometry(fd: Stream, nobonds: bool = false): Geometry =
     for i in 0..<result.atoms.len:
       if result.atoms[i].symbol.strip(true, true, Digits) == symbol:
         result.atoms[i].mass = mass
-  if not nobonds:
+  if not nobonds and result.atoms.len > 1:
     result.bonds = fd.readBonds()
 
 proc readGradient(fd: Stream): Geometry =
