@@ -1,9 +1,12 @@
 from structures import Geometry, Atom, Bond
 from utils import skipLines, parseFloat, associate, floatPattern, parseInt, find
-from units import Angstrom, Bohr, toAngstrom
+from units import Angstrom, Bohr, toAngstrom, AMU, `==`
 from streams import Stream, atEnd, readLine
-from strutils import `%`
+from strutils import `%`, strip, Digits
+from tables import newTable, `[]`, `[]=`, getOrDefault
 import pegs
+
+var massTable = newTable[string, AMU]()
 
 proc readBonds(fd: Stream): seq[Bond] =
   let bondPattern {.global.} = peg"\s*'internuclear distances'"
@@ -25,11 +28,16 @@ proc readGeometry(fd: Stream, nobonds: bool = false): Geometry =
   # no tag charge x y z
   let coordTablePattern {.global.} =
     peg("""\s*{\d+}\s{\ident}\s+{$1}\s+{$1}\s+{$1}\s+{$1}""" % floatPattern)
+  let massPattern {.global.} = peg"\s*'Atomic Mass'"
+  let massTablePattern {.global.} =
+    peg("""^\s*{\ident}\s+{$1}""" % floatPattern)
   result.atoms = newSeq[Atom]()
   fd.skipLines(3)
   var captures: array[6, string]
   while fd.readLine().match(coordTablePattern, captures):
     let atom: Atom = (id: captures[0].parseInt().Natural, symbol: captures[1],
+                      mass: massTable
+                        .getOrDefault(captures[1].strip(true, true, Digits)),
                       x: captures[3].parseFloat().Angstrom,
                       y: captures[4].parseFloat().Angstrom,
                       z: captures[5].parseFloat().Angstrom,
@@ -37,6 +45,15 @@ proc readGeometry(fd: Stream, nobonds: bool = false): Geometry =
                       dy: 0.0.Angstrom,
                       dz: 0.0.Angstrom)
     result.atoms.add(atom)
+  discard fd.find(massPattern, "Masses not found!")
+  fd.skipLines(2)
+  while fd.readLine().match(massTablePattern, captures):
+    let symbol = captures[0]
+    let mass = captures[1].parseFloat().AMU
+    massTable[symbol] = mass
+    for i in 0..<result.atoms.len:
+      if result.atoms[i].symbol.strip(true, true, Digits) == symbol:
+        result.atoms[i].mass = mass
   if not nobonds:
     result.bonds = fd.readBonds()
 
@@ -49,6 +66,8 @@ proc readGradient(fd: Stream): Geometry =
   var captures: array[8, string]
   while fd.readLine().match(gradTablePattern, captures):
     let atom: Atom = (id: captures[0].parseInt().Natural, symbol: captures[1],
+                      mass: massTable
+                        .getOrDefault(captures[1].strip(true, true, Digits)),
                       x: captures[2].parseFloat().Bohr().toAngstrom(),
                       y: captures[3].parseFloat().Bohr().toAngstrom(),
                       z: captures[4].parseFloat().Bohr().toAngstrom(),

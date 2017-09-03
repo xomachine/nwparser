@@ -1,4 +1,4 @@
-from units import Angstrom, Hartree, ReversedCM, Bohr
+from units import Angstrom, Hartree, ReversedCM, Bohr, AMU
 
 type
   CalcType* = enum
@@ -6,9 +6,11 @@ type
     Optimization
     Frequency
     MEP
+  InertiaMatrix* = array[9, AMU]
   Atom* = tuple
     id: Natural
     symbol: string
+    mass: AMU
     x, y, z: Angstrom
     dx, dy, dz: Angstrom
   Bond* = tuple
@@ -22,6 +24,7 @@ type
   Geometry* = tuple
     atoms: seq[Atom]
     bonds: seq[Bond]
+    inertia_momentum: InertiaMatrix
   PESPoint* = tuple
     geometry: Geometry
     energy: Hartree

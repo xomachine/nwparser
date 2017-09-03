@@ -4,6 +4,7 @@ from utils import find, findAny, floatPattern, parseFloat, parseInt
 from units import Hartree, `$`
 from structures import Calculation, CalcType, PESPoint
 from nwgeometry import findGeometry
+from nwinertia import readInertiaMoments
 
 const OptHeader* = """^\s*'NWChem Geometry Optimization'$"""
 let multiplicityPattern* = peg"^\s*('Spin'\s+)?[mM]'ult'\D+{\d+}\D*$"
@@ -47,18 +48,19 @@ proc readDriver(fd: Stream): Calculation =
   let energyPattern {.global.} =
     peg("""^'@'\s+{\d+}\s+{""" & floatPattern & """}.*$""")
   let stepPattern {.global.} = peg"^\s*'Step'\s+{\d+}.*$"
-  let convergedPattern {.global.} = peg"^\s*'Optimization converged'\s*$"
+  let convergedPattern {.global.} = peg"\s*'Optimization converged'\s*"
   result.path = newSeq[PESPoint]()
   while not fd.atEnd():
     let patternIndex = fd.findAny(stepPattern, convergedPattern, endPattern)
     case patternIndex
     of 0:
-      let stepGeometry = fd.findGeometry(nobonds = true)
+      var stepGeometry = fd.findGeometry(nobonds = true)
       if result.multiplicity == 0:
         let multiplicityCaptures = fd.find(multiplicityPattern,
                                            "Can not find multiplicity")
         result.multiplicity = multiplicityCaptures[0].parseInt()
         stderr.writeLine("Multiplicity = " & $result.multiplicity)
+      stepGeometry.inertia_momentum = fd.readInertiaMoments()
       let energyCaptures = fd.find(energyPattern, "Can not find energy")
       let energy = energyCaptures[1].parseFloat().Hartree()
       stderr.writeLine("Energy = " & $energy)
@@ -66,8 +68,12 @@ proc readDriver(fd: Stream): Calculation =
       result.path.add(point)
       continue
     of 1:
+      stderr.writeLine("Optimization converged!")
       let energyCaptures = fd.find(energyPattern, "Can not find energy")
+      stderr.writeLine("Energy found!")
       result.path[^1].geometry = fd.findGeometry()
       result.path[^1].energy = energyCaptures[1].parseFloat().Hartree()
+      result.path[^1].geometry.inertia_momentum =
+        result.path[^2].geometry.inertia_momentum
     else: discard
     break

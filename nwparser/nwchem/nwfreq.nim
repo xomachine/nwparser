@@ -1,5 +1,6 @@
 from nwgeometry import findGeometry
 from nwopt import multiplicityPattern
+from nwinertia import readInertiaMoments
 from utils import skipLines, floatPattern, parseInt, parseFloat, find, limit
 from structures import Calculation, CalcType, Mode, TermoData, Hessian
 from structures import initHessian, setElement
@@ -119,6 +120,7 @@ proc readFreq*(fd: Stream): Calculation =
   discard fd.find(hessPattern)
   result.hessian = fd.readHessian(rank)
   stderr.writeLine("Hessian read successfully")
+  result.initial.inertia_momentum = fd.readInertiaMoments()
   discard fd.find(rotationalPattern)
   result.termochemistry = readThermal(fd)
   stderr.writeLine("Thermal read successfully")

@@ -5,17 +5,20 @@ type
   ReversedCM* = distinct BiggestFloat
   Hartree* = distinct BiggestFloat
   Calloria* = distinct BiggestFloat
+  AMU* = distinct BiggestFloat
   Kilo*[T] = distinct T
 
 proc `+`*(x, y: Hartree): Hartree {.borrow.}
 proc `==`*(x, y: Angstrom): bool {.borrow.}
+proc `==`*(x, y: AMU): bool {.borrow.}
+proc `+`*(x, y: AMU): AMU {.borrow.}
 
 converter toAngstrom*(input: Bohr): Angstrom =
   Angstrom(input.BiggestFloat * 0.52918)
 converter toBohr*(input: Angstrom): Bohr =
   Bohr(input.BiggestFloat / 0.52918)
 
-proc `$`*(a: Angstrom | Bohr | ReversedCM | Hartree | Calloria): string =
+proc `$`*(a: Angstrom | Bohr | ReversedCM | Hartree | Calloria | AMU): string =
   $(a.BiggestFloat)
 
 converter toKilo*[T](input: T): Kilo[T] = Kilo[T](input.BiggestFloat * 1000)
