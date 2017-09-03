@@ -22,7 +22,10 @@ proc parseFile*(fd: Stream): seq[Calculation] =
       ZTSCalc: readZTS,
       FreqCalc: readFreq,
       OptCalc: readOpt)
+  var prevResult = defaultInitial
   for i in 0..<result.len:
     if result[i].initial.atoms == nil:
-      result[i].initial = defaultInitial
+      result[i].initial = prevResult
+    if result[i].kind == CalcType.Optimization:
+      prevResult = result[i].path[^1].geometry
 
