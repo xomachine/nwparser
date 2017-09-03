@@ -17,8 +17,8 @@ proc `$`*(self: seq[Field]): string =
   self.mapIt($it).join("\n")
 
 proc `$`(self: seq[Mode]): string =
-  self.mapIt(it.frequency).filterIt(abs(it.BiggestFloat) > 1.0)
-      .mapIt($it).join("\n")
+  self.mapIt(it.frequency.BiggestFloat).filterIt(abs(it) > 1.0)
+      .mapIt(if it > 0: $it else: $abs(it) & 'i').join("\n")
 
 proc `$`[N](self: array[N, ReversedCM]): string =
   self.mapIt($it).join("\n")
