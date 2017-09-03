@@ -24,7 +24,7 @@ proc `$`[N](self: array[N, ReversedCM]): string =
   self.mapIt($it).join("\n")
 
 proc `$`(self: InertiaMatrix): string =
-  [self[0], self[4], self[8]].join("\n")
+  [self[4], self[0], self[8]].join("\n")
 
 proc newField[T](name: string, data: T): Field =
   result.name = name
