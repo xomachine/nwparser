@@ -22,7 +22,7 @@ proc readHessian(fd: Stream): Hessian =
   let floats {.global.} = peg"'-'?\d+'.'\d+'D'[+-]\d+"
   let lineNumber {.global.} = peg"\s*{\d+}\s+.*"
   var captures: array[10, string]
-  var residue: int
+  var residue: int = 1
   while not fd.atEnd() and residue > 0:
     let prepattern = """\s+{\d+}""".repeat(residue.limit(10))
     let pattern = peg(prepattern)
@@ -127,7 +127,8 @@ proc readFreq*(fd: Stream): Calculation =
   result.energy = fd.readEnergy()
   discard fd.find(hessPattern)
   result.hessian = fd.readHessian()
-  stderr.writeLine("Hessian read successfully")
+  stderr.writeLine("Hessian of rank " & $result.hessian.rank &
+                   " has been read successfully")
   result.initial.inertia_momentum = fd.readInertiaMoments()
   discard fd.find(rotationalPattern)
   result.termochemistry = readThermal(fd)
