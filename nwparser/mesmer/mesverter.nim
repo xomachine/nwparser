@@ -1,5 +1,5 @@
 from xmltree import `$`
-from structures import Calculation
+from ../structures import Calculation
 from mesmer import toMolecule, toXML
 from molsystem import fromCalcs
 

@@ -3,8 +3,8 @@ import strtabs
 import xmltree
 from strutils import `%`, join
 from sequtils import mapIt, map, filterIt
-from structures import Bond, Atom
-from units import Hartree, `+`
+from ../structures import Bond, Atom
+from ../units import Hartree, `+`
 from molsystem import MolSystem
 
 type

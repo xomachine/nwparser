@@ -1,4 +1,4 @@
-from structures import PESPoint, Mode, Hessian, TermoData, CalcType,
+from ../structures import PESPoint, Mode, Hessian, TermoData, CalcType,
                        Calculation
 
 type

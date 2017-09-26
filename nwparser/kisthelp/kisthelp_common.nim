@@ -1,5 +1,5 @@
-from structures import CalcType, Mode, MolSystem, InertiaMatrix
-from units import ReversedCM, Hartree, `$`, AMU, `+`
+from ../structures import CalcType, Mode, MolSystem, InertiaMatrix
+from ../units import ReversedCM, Hartree, `$`, AMU, `+`
 from strutils import repeat, join
 from sequtils import mapIt, foldl, filterIt
 

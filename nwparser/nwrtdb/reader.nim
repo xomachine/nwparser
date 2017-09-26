@@ -1,8 +1,8 @@
 from rtdb.hdbm import load
 from rtdb.rtdb import toRTDB, getKeyAs, `$`
 from dbgeometry import readGeometry
-from structures import Calculation, CalcType, Mode, PESPoint
-from units import ReversedCM, Bohr
+from ../structures import Calculation, CalcType, Mode, PESPoint
+from ../units import ReversedCM, Bohr
 from streams import Stream
 from strutils import repeat
 from sequtils import mapIt, filterIt, distribute
