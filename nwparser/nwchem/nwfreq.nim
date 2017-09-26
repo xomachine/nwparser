@@ -14,18 +14,18 @@ from strutils import `%`, repeat, strip, replace
 const FreqHeader* = """\s*'NWChem Nuclear Hessian and Frequency Analysis'.*"""
 const elemPart = """\s+{$1}""" % floatPattern
 
-proc readHessian(fd: Stream, rank: Natural): Hessian =
+proc readHessian(fd: Stream): Hessian =
   stderr.writeLine("Reading Hessian")
-  result = initHessian(rank)
   fd.skipLines(3) # Header
-  let floats = peg"'-'?\d+'.'\d+'D'[+-]\d+"
-  let lineNumber = peg"\s*{\d+}\s+.*"
+  var rank = 0
+  var hessLines = newSeq[tuple[n: Natural, s: string]]()
+  let floats {.global.} = peg"'-'?\d+'.'\d+'D'[+-]\d+"
+  let lineNumber {.global.} = peg"\s*{\d+}\s+.*"
   var captures: array[10, string]
-  var residue: int = rank
+  var residue: int
   while not fd.atEnd() and residue > 0:
     let prepattern = """\s+{\d+}""".repeat(residue.limit(10))
     let pattern = peg(prepattern)
-    residue -= 10
     let columnNumbersStr = fd.readLine()
     assert columnNumbersStr.match(pattern, captures)
     let startColumn = captures[0].parseInt()
@@ -36,12 +36,21 @@ proc readHessian(fd: Stream, rank: Natural): Hessian =
         fd.skipLines(1)
         break
       let lineNo = captures[0].parseInt()
-      assert lineNo in 1..rank
+      assert lineNo > 0
+      hessLines.add((n: lineNo.Natural, s: rawline))
+    if rank == 0:
+      rank = hessLines.len
+      residue = rank
+      result = initHessian(rank)
+    for hessLine in hessLines:
+      let (lineNo, rawline) = hessLine
       let line = rawline.findAll(floats)
       assert line.len > 0
       for col in 0..<line.len:
         let value = line[col].replace("D", "e").parseFloat().Hartree()
         result.setElement(lineNo - 1, col+startColumn - 1, value)
+    residue -= 10
+    hessLines.setLen(0)
 
 proc readThermal(fd: Stream): TermoData =
   let pattern {.global.} =
@@ -116,17 +125,14 @@ proc readFreq*(fd: Stream): Calculation =
   result.kind = CalcType.Frequency
   result.multiplicity = fd.find(multiplicityPattern)[0].parseInt()
   result.energy = fd.readEnergy()
-  let captures = fd.find(rankPattern, "Can not detect hessian rank")
-  let rank = captures[0].parseInt()
-  stderr.writeLine("Detected Number of frequencies is " & $rank)
   discard fd.find(hessPattern)
-  result.hessian = fd.readHessian(rank)
+  result.hessian = fd.readHessian()
   stderr.writeLine("Hessian read successfully")
   result.initial.inertia_momentum = fd.readInertiaMoments()
   discard fd.find(rotationalPattern)
   result.termochemistry = readThermal(fd)
   stderr.writeLine("Thermal read successfully")
   discard fd.find(freqPattern)
-  result.modes = readModes(fd, rank)
+  result.modes = readModes(fd, result.hessian.rank)
   stderr.writeLine("Modes read successfully")
 
