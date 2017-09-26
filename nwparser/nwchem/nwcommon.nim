@@ -1,9 +1,9 @@
 
 from pegs import peg
 from streams import Stream, readLine, atEnd
-from structures import Calculation, CalcType
-from units import `==`
-from utils import associate
+from ../structures import Calculation, CalcType
+from ../units import `==`
+from ../utils import associate
 from nwzts import ZTSHeader, readZTS
 from nwfreq import FreqHeader, readFreq
 from nwgeometry import findGeometry

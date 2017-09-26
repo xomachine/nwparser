@@ -1,8 +1,8 @@
 from streams import Stream, atEnd, readLine
 from pegs import peg, match
-from utils import find, findAny, floatPattern, parseFloat, parseInt
-from units import Hartree, `$`
-from structures import Calculation, CalcType, PESPoint, InertiaMatrix
+from ../utils import find, findAny, floatPattern, parseFloat, parseInt
+from ../units import Hartree, `$`
+from ../structures import Calculation, CalcType, PESPoint, InertiaMatrix
 from nwgeometry import findGeometry
 from nwinertia import readInertiaMoments
 

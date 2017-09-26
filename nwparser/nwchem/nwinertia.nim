@@ -1,9 +1,9 @@
 from streams import Stream, readLine
 from strutils import `%`
 from pegs import peg, match
-from structures import InertiaMatrix
-from units import AMU
-from utils import skipLines, find, floatPattern, parseFloat
+from ../structures import InertiaMatrix
+from ../units import AMU
+from ../utils import skipLines, find, floatPattern, parseFloat
 
 proc readInertiaMoments*(fd: Stream): InertiaMatrix =
   let inertiaPattern {.global.} = peg"' moments of inertia (a.u.)'"

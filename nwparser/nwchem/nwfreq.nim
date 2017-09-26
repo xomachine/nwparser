@@ -2,10 +2,10 @@ from nwgeometry import findGeometry
 from nwopt import multiplicityPattern
 from nwinertia import readInertiaMoments
 from nwenergy import readEnergy
-from utils import skipLines, floatPattern, parseInt, parseFloat, find, limit
-from structures import Calculation, CalcType, Mode, TermoData, Hessian
-from structures import initHessian, setElement
-from units import ReversedCM, Bohr, Hartree
+from ../utils import skipLines, floatPattern, parseInt, parseFloat, find, limit
+from ../structures import Calculation, CalcType, Mode, TermoData, Hessian
+from ../structures import initHessian, setElement
+from ../units import ReversedCM, Bohr, Hartree
 from streams import Stream, atEnd, readLine
 from pegs import peg, findAll, match
 from sequtils import mapIt

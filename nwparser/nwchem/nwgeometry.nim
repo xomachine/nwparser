@@ -1,6 +1,6 @@
-from structures import Geometry, Atom, Bond
-from utils import skipLines, parseFloat, associate, floatPattern, parseInt, find
-from units import Angstrom, Bohr, toAngstrom, AMU, `==`
+from ../structures import Geometry, Atom, Bond
+from ../utils import skipLines, parseFloat, associate, floatPattern, parseInt, find
+from ../units import Angstrom, Bohr, toAngstrom, AMU, `==`
 from streams import Stream, atEnd, readLine
 from strutils import `%`, strip, Digits
 from tables import newTable, `[]`, `[]=`, getOrDefault

@@ -1,8 +1,8 @@
 from streams import Stream, atEnd, readLine
 from pegs import peg, match
-from structures import Calculation, CalcType, PESPoint
-from utils import skipLines, parseFloat, parseInt, floatPattern
-from units import Hartree
+from ../structures import Calculation, CalcType, PESPoint
+from ../utils import skipLines, parseFloat, parseInt, floatPattern
+from ../units import Hartree
 from nwgeometry import findGeometry
 
 const prefix = """\@'zts'?"""

@@ -1,8 +1,8 @@
 from streams import Stream
 from pegs import peg
-from strutils import `%`
-from units import Hartree
-from utils import find, floatPattern, parseFloat
+from ../strutils import `%`
+from ../units import Hartree
+from ../utils import find, floatPattern, parseFloat
 
 proc readEnergy*(fd: Stream): Hartree =
   let energyPattern {.global.} =
