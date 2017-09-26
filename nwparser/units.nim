@@ -14,7 +14,7 @@ proc `==`*(x, y: AMU): bool {.borrow.}
 proc `+`*(x, y: AMU): AMU {.borrow.}
 
 converter toCalloria*(input: Hartree): Calloria =
-  Calloria(input.BiggestFloat * 627.509474)
+  Calloria(input.BiggestFloat * 627509.474)
 converter toAngstrom*(input: Bohr): Angstrom =
   Angstrom(input.BiggestFloat * 0.52918)
 converter toBohr*(input: Angstrom): Bohr =
